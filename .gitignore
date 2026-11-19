@@ -20,6 +20,19 @@ out/
 # Uploads
 backend/uploads/
 
+# Logs & Binaries
+*.log
+*.exe
+*.zip
+*.txt
+
+# Temporary test renders
+frontend/public/*_preview.png
+frontend/public/*_crop.png
+frontend/public/screenshot_from_browser.png
+frontend/public/browser_center_view.png
+frontend/public/character_studio_verification*.png
+
 # OS
 .DS_Store
 Thumbs.db
