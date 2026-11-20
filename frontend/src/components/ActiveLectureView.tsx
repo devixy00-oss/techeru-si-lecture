@@ -722,18 +722,6 @@ export default function ActiveLectureView({
               <HomeIcon className="w-4 h-4" />
               <span>Home</span>
             </button>
-            {onOpenLiveClass && (
-              <button
-                onClick={onOpenLiveClass}
-                className="w-full flex items-center justify-between px-4 py-2 rounded-xl font-bold text-xs bg-red-600/15 border border-red-500/30 text-red-400 hover:bg-red-600/25 transition-all group shadow-sm"
-              >
-                <div className="flex items-center gap-3.5">
-                  <Radio className="w-4 h-4 text-red-500 group-hover:animate-pulse" />
-                  <span>Live Class</span>
-                </div>
-                <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
-              </button>
-            )}
             <button
               onClick={() => setActiveTab('lecture')}
               className={`w-full flex items-center gap-3.5 px-4 py-2 rounded-xl font-medium text-xs transition-all ${
