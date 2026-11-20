@@ -387,7 +387,7 @@ export default function Home() {
   };
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-[#070b15] text-white flex flex-col font-sans select-none">
+    <div className="h-screen w-screen overflow-hidden bg-[#0d2131] text-white flex flex-col font-sans select-none">
       {currentView === 'lecture' ? (
         <ActiveLectureView
           notebook={activeNotebook}
@@ -395,31 +395,46 @@ export default function Home() {
           onNavigateHome={() => setCurrentView('notebooks')}
         />
       ) : (
-        <div className="h-screen w-screen flex flex-col overflow-hidden bg-[#070b15]">
-          {/* My Notebooks Top Header */}
-          <header className="h-16 px-6 bg-[#0a1020]/90 border-b border-white/10 backdrop-blur-xl flex items-center justify-between shrink-0 z-30">
+        <div className="h-screen w-screen flex flex-col overflow-hidden bg-[#0d2131]">
+          {/* My Notebooks Top Header with Palette #EA8833, #EEA23A, #F38940, #132F45, #32667F */}
+          <header className="h-16 px-6 bg-[#132F45]/95 border-b border-[#32667F]/40 backdrop-blur-xl flex items-center justify-between shrink-0 z-30">
             <div
               className="flex items-center gap-3 cursor-pointer"
               onClick={() => setCurrentView('lecture')}
             >
-              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-500 to-orange-400 p-0.5 shadow-lg shadow-orange-500/20 flex items-center justify-center">
-                <img src="/logo_cat.png" alt="Techeru" className="w-9 h-9 object-contain rounded-full" />
+              <div className="w-10 h-10 flex items-center justify-center shrink-0">
+                <img
+                  src="/techeru_transparent.png"
+                  alt="Techeru"
+                  className="w-10 h-10 object-contain drop-shadow-md"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/logo_cat.png';
+                  }}
+                />
               </div>
               <div className="flex flex-col">
                 <div className="flex items-center gap-1.5 leading-none">
                   <span className="font-extrabold text-lg text-white tracking-tight">Techeru SI</span>
-                  <span className="font-extrabold text-lg text-[#38bdf8] tracking-tight">Lecture</span>
+                  <span className="font-extrabold text-lg text-[#F38940] tracking-tight">Lecture</span>
                 </div>
-                <span className="text-[10px] text-gray-400 tracking-wider mt-0.5 font-medium">
+                <span className="text-[10px] text-[#32667F] tracking-wider mt-0.5 font-medium">
                   Learn • Ask • Practice • Excel
                 </span>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#0e2538] border border-[#32667F]/50 text-white shadow-sm">
+                <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-[#EA8833] to-[#F38940] flex items-center justify-center text-[11px] font-extrabold text-white shadow-sm">
+                  G
+                </div>
+                <span className="text-xs font-semibold hidden sm:inline">Guest Mode</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              </div>
+
               <button
                 onClick={() => setCurrentView('lecture')}
-                className="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-600/30 transition-all"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#EA8833] via-[#EEA23A] to-[#F38940] hover:opacity-90 text-white font-bold text-xs shadow-lg shadow-[#EA8833]/30 transition-all hover:scale-102"
               >
                 <span>Resume Active Lecture</span>
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
