@@ -732,7 +732,7 @@ export default function LiveClassMode({ sessions, onExit }: Props) {
             <TeacherSubtitles
               text={subtitleText}
               isSpeaking={isSpeakingVoice}
-              speakerName={language === 'am' ? 'መምህር ቴክሩ' : 'Techeru AI'}
+              speakerName={language === 'am' ? 'መምህር ቴክሩ' : 'Techeru SI Lecture'}
             />
           </div>
 

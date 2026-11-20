@@ -43,8 +43,8 @@ function LoginContent() {
         {/* Logo */}
         <div className="text-center mb-10">
           <img src="/logo_cat.png" alt="Techeru Logo" className="w-20 h-20 object-contain drop-shadow-xl mx-auto mb-4" />
-          <h1 className="text-3xl font-bold text-white">Techeru AI</h1>
-          <p className="text-gray-400 mt-2">Your personal AI teacher 🐱</p>
+          <h1 className="text-3xl font-bold text-white">Techeru SI Lecture</h1>
+          <p className="text-gray-400 mt-2">Your personal AI lecture companion 🐱</p>
         </div>
 
         {/* Card */}

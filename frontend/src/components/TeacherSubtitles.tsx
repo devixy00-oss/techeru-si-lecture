@@ -12,7 +12,7 @@ interface TeacherSubtitlesProps {
 export default function TeacherSubtitles({
   text,
   isSpeaking,
-  speakerName = 'Techeru AI',
+  speakerName = 'Techeru SI Lecture',
 }: TeacherSubtitlesProps) {
   if (!text && !isSpeaking) return null;
 

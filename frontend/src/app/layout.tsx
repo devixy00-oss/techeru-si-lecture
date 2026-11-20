@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Techeru AI",
-  description: "Your personal AI tutor",
+  title: "Techeru SI Lecture",
+  description: "Techeru SI Lecture - Your AI 3D Lecture & Learning Companion",
   icons: {
     icon: "/logo_cat.png",
     shortcut: "/logo_cat.png",

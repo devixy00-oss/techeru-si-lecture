@@ -149,7 +149,7 @@ export default function Home() {
         {
           role: 'tutor',
           content:
-            "Hey! 👋 I'm **Techeru**, your AI teacher 🐱\n\nUpload a PDF using the **+ Add source** button on the left, or ask me any question right now and I'll teach you step-by-step!",
+            "Hey! 👋 I'm **Techeru**, your AI lecturer 🐱\n\nUpload a PDF using the **+ Add source** button on the left, or ask me any question right now and I'll teach you step-by-step!",
         },
       ],
       sessionIds: [],
@@ -386,7 +386,7 @@ export default function Home() {
             alt="Techeru Logo"
             className="w-9 h-9 object-contain drop-shadow-md"
           />
-          <span className="font-bold text-lg tracking-tight text-white">Techeru AI</span>
+          <span className="font-bold text-lg tracking-tight text-white">Techeru SI Lecture</span>
         </div>
 
         <nav className="flex items-center gap-8 text-sm font-medium">
@@ -759,13 +759,13 @@ export default function Home() {
               <div className="w-40 h-40 rounded-full bg-gradient-to-b from-blue-500/20 to-purple-500/20 absolute blur-2xl opacity-60 pointer-events-none" />
               <img
                 src="/techeru_cutout.png"
-                alt="Techeru AI"
+                alt="Techeru SI Lecture"
                 className="w-44 h-44 object-contain relative z-10 drop-shadow-2xl animate-breathe"
               />
             </div>
 
-            <h2 className="text-xl font-bold text-white leading-tight">Techeru AI</h2>
-            <p className="text-xs text-gray-400 mt-1 mb-3">Your personal AI tutor</p>
+            <h2 className="text-xl font-bold text-white leading-tight">Techeru SI Lecture</h2>
+            <p className="text-xs text-gray-400 mt-1 mb-3">Your personal AI lecture companion</p>
 
             <div className="flex items-center gap-2 text-xs font-medium text-green-400 bg-green-400/10 px-3 py-1 rounded-full mb-4 border border-green-400/20">
               <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />

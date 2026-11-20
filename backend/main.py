@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers import ingestion, sessions, chat, models_3d
 
-app = FastAPI(title="Techeru AI API", version="0.1.0")
+app = FastAPI(title="Techeru SI Lecture API", version="0.1.0")
 
 # Enable CORS for all local and tunnel origins
 app.add_middleware(
@@ -23,7 +23,7 @@ app.include_router(models_3d.router)
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to Techeru AI API"}
+    return {"message": "Welcome to Techeru SI Lecture API"}
 
 @app.get("/health")
 def health_check():

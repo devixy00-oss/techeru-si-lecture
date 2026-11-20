@@ -1,6 +1,6 @@
-# Techeru AI
+# Techeru SI Lecture
 
-> Your personal, conversational AI tutor. Record lectures, upload notes, and learn actively.
+> Your personal, conversational AI lecture companion. Record lectures, upload notes, and learn actively in 3D.
 
 ## 🚀 Features
 

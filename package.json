@@ -1,4 +1,5 @@
 {
+  "name": "techeru-si-lecture",
   "dependencies": {
     "localtunnel": "^2.0.2"
   }
