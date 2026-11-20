@@ -38,7 +38,6 @@ import {
   Share2,
   User,
 } from 'lucide-react';
-import TeacherCat3D from './TeacherCat3D';
 import FlashcardDeck from './FlashcardDeck';
 import { speechManager } from '@/audio/SpeechManager';
 import { teacherSM, TeacherState } from '@/teacher/TeacherStateMachine';
@@ -102,7 +101,6 @@ export default function ActiveLectureView({
   const [showChangeTopicModal, setShowChangeTopicModal] = useState(false);
   const [showPipAssistant, setShowPipAssistant] = useState(false);
   const [showPromo, setShowPromo] = useState(true);
-  const [use3DAvatar, setUse3DAvatar] = useState(true);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showKeyPointsModal, setShowKeyPointsModal] = useState(false);
 
@@ -579,14 +577,14 @@ export default function ActiveLectureView({
               </div>
             )}
 
-            {/* Pip The Mouse Section */}
+            {/* Pip The Mouse Section with 100% Transparent Background */}
             <div className="w-full flex items-end justify-start relative pt-2">
               <div
                 onClick={() => setShowPipAssistant(true)}
                 className={`absolute -top-1 left-16 border rounded-xl px-2.5 py-1.5 shadow-xl cursor-pointer hover:border-pink-400 transition-all z-20 whitespace-nowrap ${
                   isDarkMode
-                    ? 'bg-[#181c2b] border-pink-500/40'
-                    : 'bg-white border-pink-400/50 text-[#701a75]'
+                    ? 'bg-[#132F45]/90 border-pink-500/40 backdrop-blur-md'
+                    : 'bg-white/95 border-pink-400/50 text-[#701a75] backdrop-blur-md shadow-sm'
                 }`}
               >
                 <p className="text-[10px] font-bold text-pink-400 flex items-center gap-1">
@@ -597,16 +595,13 @@ export default function ActiveLectureView({
 
               <button
                 onClick={() => setShowPipAssistant(!showPipAssistant)}
-                className="hover:scale-105 transition-transform duration-200 focus:outline-none"
+                className="hover:scale-105 transition-transform duration-200 focus:outline-none bg-transparent p-0 border-0"
                 title="Click to study with Pip!"
               >
                 <img
-                  src="/classroom/pip_corner.png"
+                  src="/pip.png"
                   alt="Pip"
-                  className="w-24 h-24 object-contain drop-shadow-2xl"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/pip.png';
-                  }}
+                  className="w-24 h-24 object-contain filter drop-shadow-xl bg-transparent"
                 />
               </button>
             </div>
@@ -616,7 +611,7 @@ export default function ActiveLectureView({
         {/* ────────── CENTER COLUMN: CLASSROOM WORKSPACE ────────── */}
         <main className={`flex-1 flex flex-col p-4 overflow-hidden ${themeBg} transition-colors duration-200`}>
           {/* Main Lecture Card */}
-          <div className={`flex-1 flex flex-col ${cardBg} border rounded-3xl p-5 shadow-2xl backdrop-blur-2xl overflow-hidden relative min-h-0`}>
+          <div className={`flex-1 flex flex-col justify-between ${cardBg} border rounded-3xl p-5 shadow-2xl backdrop-blur-2xl overflow-hidden relative min-h-0`}>
             {/* Ambient Back Glows using palette */}
             <div className="w-96 h-96 bg-[#EA8833]/10 rounded-full blur-3xl absolute -top-20 -left-20 pointer-events-none" />
             <div className="w-96 h-96 bg-[#32667F]/15 rounded-full blur-3xl absolute -bottom-20 -right-20 pointer-events-none" />
@@ -763,7 +758,14 @@ export default function ActiveLectureView({
                       {msg.sender === 'techeru' && (
                         <div className="flex items-start gap-3">
                           <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#EA8833] to-[#F38940] p-0.5 shrink-0 overflow-hidden shadow-md">
-                            <img src="/logo_cat.png" alt="Techeru" className="w-full h-full object-contain rounded-full bg-[#132F45]" />
+                            <img
+                              src="/techeru_transparent.png"
+                              alt="Techeru"
+                              className="w-full h-full object-contain rounded-full"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = '/logo_cat.png';
+                              }}
+                            />
                           </div>
                           <div className={`flex-1 max-w-2xl ${chatBubbleTecheru} border rounded-2xl p-4 shadow-xl`}>
                             <div className="flex items-start justify-between gap-4">
@@ -1010,7 +1012,7 @@ export default function ActiveLectureView({
             </div>
 
             {/* 4. Bottom Input Bar (Cleanly Anchored at Bottom, Giving Chat Maximum Space!) */}
-            <div className="pt-2 relative z-10 shrink-0">
+            <div className="pt-3 relative z-10 shrink-0 mt-auto">
               <div className={`${inputBg} rounded-full px-4 py-2 flex items-center gap-3 shadow-xl backdrop-blur-xl transition-colors`}>
                 <Sparkles className="w-4 h-4 text-[#EA8833] shrink-0 animate-pulse" />
                 <input
@@ -1115,63 +1117,33 @@ export default function ActiveLectureView({
               <span className={`text-xs font-bold tracking-wide ${isDarkMode ? 'text-white' : 'text-[#132F45]'}`}>
                 Techeru AI Teacher
               </span>
-              <span className="text-[10px] text-emerald-400 font-semibold uppercase tracking-wider ml-1">
-                Online
-              </span>
             </div>
-            <button
-              onClick={() => setUse3DAvatar(!use3DAvatar)}
-              className={`text-xs px-2 py-0.5 rounded border transition-all ${
-                isDarkMode
-                  ? 'bg-[#183952] border-[#32667F]/50 text-gray-200 hover:border-[#EA8833]'
-                  : 'bg-white border-[#32667F]/30 text-[#132F45] hover:border-[#EA8833]'
-              }`}
-              title={use3DAvatar ? 'Switch to Studio Portrait' : 'Switch to 3D Canvas'}
-            >
-              {use3DAvatar ? '2D View' : '3D View'}
-            </button>
+            <span className="text-[10px] text-emerald-400 font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+              Online
+            </span>
           </div>
 
-          {/* Character Viewport Frame */}
-          <div className="my-3 flex flex-col items-center">
-            <div className={`w-full h-56 rounded-2xl overflow-hidden relative shadow-2xl flex items-center justify-center border ${
-              isDarkMode
-                ? 'bg-gradient-to-b from-[#132F45] to-[#0d2131] border-[#32667F]/40'
-                : 'bg-gradient-to-b from-white to-[#eef4f8] border-[#32667F]/30 shadow-lg'
-            }`}>
-              {use3DAvatar ? (
-                <div className="w-full h-full relative">
-                  <TeacherCat3D
-                    cameraPreset="upper"
-                    teacherState="IDLE"
-                    modelUrl="/models/teacher-cat.glb?v=20261119"
-                  />
-                  <div className="absolute top-2 right-2 bg-[#132F45]/80 border border-[#32667F]/50 text-[9px] text-[#EEA23A] px-2 py-0.5 rounded-full font-mono backdrop-blur-sm">
-                    3D Studio
-                  </div>
-                </div>
-              ) : (
-                <div className="w-full h-full relative flex items-center justify-center">
-                  <img
-                    src="/classroom/techeru_panel.jpg"
-                    alt="Techeru AI Teacher"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/character/official_cat_ref.jpg';
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
-                </div>
-              )}
+          {/* Sleek Professor Techeru Profile Badge (Compact & Responsive - No bulky 3D viewport) */}
+          <div className={`my-3 p-3 rounded-2xl border flex items-center gap-3 shadow-md ${
+            isDarkMode ? 'bg-[#183952]/80 border-[#32667F]/40' : 'bg-white border-[#32667F]/30 shadow-sm'
+          }`}>
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-[#EA8833] to-[#F38940] p-1 shrink-0 shadow-md flex items-center justify-center">
+              <img
+                src="/techeru_transparent.png"
+                alt="Professor Techeru"
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/logo_cat.png';
+                }}
+              />
             </div>
-
-            {/* Banner Below Avatar */}
-            <div className={`w-full mt-2.5 border rounded-xl px-3 py-2 text-center shadow-sm ${
-              isDarkMode ? 'bg-[#183952]/80 border-[#32667F]/40' : 'bg-white border-[#32667F]/30'
-            }`}>
-              <p className="text-[11px] font-medium">
-                I'm <strong className="text-[#EA8833] font-bold">Techeru</strong>! Let's learn{' '}
-                <span className="font-semibold text-[#EEA23A]">{notebook.title}</span> together! ✨
+            <div className="min-w-0">
+              <p className="text-xs font-bold leading-tight flex items-center gap-1">
+                <span>Professor Techeru</span>
+                <Sparkles className="w-3.5 h-3.5 text-[#EEA23A]" />
+              </p>
+              <p className="text-[11px] text-[#EEA23A] font-medium truncate mt-0.5">
+                Topic: {notebook.title}
               </p>
             </div>
           </div>
