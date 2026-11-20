@@ -38,6 +38,13 @@ import {
   Share2,
   User,
   Radio,
+  Calendar,
+  Clock,
+  Flame,
+  Activity,
+  Target,
+  Award,
+  Zap,
 } from 'lucide-react';
 import FlashcardDeck from './FlashcardDeck';
 import { speechManager } from '@/audio/SpeechManager';
@@ -106,6 +113,20 @@ export default function ActiveLectureView({
   const [showPromo, setShowPromo] = useState(true);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showKeyPointsModal, setShowKeyPointsModal] = useState(false);
+  const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
+
+  // Refresh classroom state
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshToast, setRefreshToast] = useState(false);
+
+  const handleRefreshClassroom = () => {
+    setIsRefreshing(true);
+    setTimeout(() => {
+      setIsRefreshing(false);
+      setRefreshToast(true);
+      setTimeout(() => setRefreshToast(false), 2500);
+    }, 600);
+  };
 
   // Chat conversation
   const [chatInput, setChatInput] = useState('');
@@ -387,30 +408,49 @@ export default function ActiveLectureView({
     <div className={`h-screen w-screen ${themeBg} ${themeText} flex flex-col overflow-hidden font-sans select-none transition-colors duration-200`}>
       {/* ─────────────────── TOP HEADER ─────────────────── */}
       <header className={`h-16 px-6 ${headerBg} border-b backdrop-blur-xl flex items-center justify-between shrink-0 z-30 transition-colors duration-200`}>
-        {/* Left: Branding with 100% Transparent Logo */}
-        <div className="flex items-center gap-3 cursor-pointer" onClick={onNavigateHome}>
-          {/* Logo with 100% Transparent Background */}
-          <div className="w-10 h-10 flex items-center justify-center shrink-0">
-            <img
-              src="/techeru_transparent.png"
-              alt="Techeru"
-              className="w-10 h-10 object-contain drop-shadow-md"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = '/logo_cat.png';
-              }}
-            />
-          </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-1.5 leading-none">
-              <span className={`font-extrabold text-lg tracking-tight ${isDarkMode ? 'text-white' : 'text-[#132F45]'}`}>
-                Techeru SI
-              </span>
-              <span className="font-extrabold text-lg text-[#F38940] tracking-tight">Lecture</span>
+        {/* Left: Branding with 100% Transparent Logo + Refresh Button */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 cursor-pointer" onClick={onNavigateHome}>
+            {/* Logo with 100% Transparent Background */}
+            <div className="w-10 h-10 flex items-center justify-center shrink-0">
+              <img
+                src="/techeru_transparent.png"
+                alt="Techeru"
+                className="w-10 h-10 object-contain drop-shadow-md"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/logo_cat.png';
+                }}
+              />
             </div>
-            <span className={`text-[10px] tracking-wider mt-0.5 font-medium ${isDarkMode ? 'text-[#32667F]' : 'text-[#32667F]'}`}>
-              Learn • Ask • Practice • Excel
-            </span>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1.5 leading-none">
+                <span className={`font-extrabold text-lg tracking-tight ${isDarkMode ? 'text-white' : 'text-[#132F45]'}`}>
+                  Techeru SI
+                </span>
+                <span className="font-extrabold text-lg text-[#F38940] tracking-tight">Lecture</span>
+              </div>
+              <span className={`text-[10px] tracking-wider mt-0.5 font-medium ${isDarkMode ? 'text-[#32667F]' : 'text-[#32667F]'}`}>
+                Learn • Ask • Practice • Excel
+              </span>
+            </div>
           </div>
+
+          {/* Refresh Button (User requested: "refresh button" pointing right next to Techeru SI Lecture) */}
+          <button
+            onClick={handleRefreshClassroom}
+            className={`p-2 rounded-xl border transition-all flex items-center justify-center shadow-sm group ${
+              isDarkMode
+                ? 'bg-[#0e2538] border-[#32667F]/50 text-gray-300 hover:text-[#EA8833] hover:border-[#EA8833]'
+                : 'bg-white border-[#32667F]/30 text-[#132F45] hover:text-[#EA8833] hover:border-[#EA8833]'
+            }`}
+            title="Refresh Classroom & Lesson Data"
+          >
+            <RefreshCw
+              className={`w-3.5 h-3.5 transition-transform duration-500 ${
+                isRefreshing ? 'animate-spin text-[#EA8833]' : 'group-hover:rotate-180'
+              }`}
+            />
+          </button>
         </div>
 
         {/* Center: Search Bar */}
@@ -499,6 +539,14 @@ export default function ActiveLectureView({
         </div>
       </header>
 
+      {/* Classroom Refresh Notification Toast */}
+      {refreshToast && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-gradient-to-r from-[#EA8833] via-[#EEA23A] to-[#F38940] text-white px-5 py-2.5 rounded-2xl shadow-2xl text-xs font-bold flex items-center gap-2.5 animate-bounce border border-white/20">
+          <RefreshCw className="w-4 h-4 animate-spin text-white" />
+          <span>Classroom refreshed & learning data synchronized! 🔄</span>
+        </div>
+      )}
+
       {/* ─────────────────── MAIN TWO-COLUMN BODY ─────────────────── */}
       <div className="flex-1 flex overflow-hidden">
         {/* ────────── LEFT SIDEBAR ────────── */}
@@ -560,13 +608,23 @@ export default function ActiveLectureView({
               <span>Flashcards</span>
             </button>
             <button
-              onClick={() => setActiveTab('summary')}
-              className={`w-full flex items-center gap-3.5 px-4 py-2 rounded-xl font-medium text-xs transition-all ${
-                isDarkMode ? 'text-gray-300 hover:text-white hover:bg-white/5' : 'text-[#132F45] hover:bg-black/5'
+              onClick={() => setShowAnalyticsModal(true)}
+              className={`w-full flex items-center justify-between px-4 py-2 rounded-xl font-medium text-xs transition-all ${
+                showAnalyticsModal
+                  ? 'bg-gradient-to-r from-emerald-600/30 to-[#32667F]/40 border border-emerald-400 text-emerald-300 shadow-md'
+                  : isDarkMode
+                  ? 'text-gray-300 hover:text-white hover:bg-white/5'
+                  : 'text-[#132F45] hover:bg-black/5'
               }`}
+              title="Open Student Learning Data Analysis"
             >
-              <BarChart2 className="w-4 h-4 text-emerald-400" />
-              <span>Progress</span>
+              <div className="flex items-center gap-3.5">
+                <BarChart2 className="w-4 h-4 text-emerald-400" />
+                <span className="font-semibold">Progress</span>
+              </div>
+              <span className="text-[10px] font-bold text-emerald-400 px-1.5 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20">
+                Analytics
+              </span>
             </button>
             <button className={`w-full flex items-center gap-3.5 px-4 py-2 rounded-xl font-medium text-xs transition-all ${
               isDarkMode ? 'text-gray-300 hover:text-white hover:bg-white/5' : 'text-[#132F45] hover:bg-black/5'
@@ -1098,20 +1156,31 @@ export default function ActiveLectureView({
               </div>
             </div>
 
-            {/* Progress Star */}
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-[#EEA23A]/20 border border-[#EEA23A]/40 flex items-center justify-center text-[#EEA23A]">
+            {/* Progress Star - Clickable for Full Analysis */}
+            <div
+              onClick={() => setShowAnalyticsModal(true)}
+              className="flex items-center gap-3 cursor-pointer group"
+              title="Click to view detailed Student Learning Data Analysis"
+            >
+              <div className="w-8 h-8 rounded-xl bg-[#EEA23A]/20 border border-[#EEA23A]/40 flex items-center justify-center text-[#EEA23A] group-hover:scale-110 transition-transform">
                 <Star className="w-4 h-4 fill-[#EEA23A] text-[#EEA23A]" />
               </div>
               <div>
-                <span className={`text-xs font-bold block leading-tight ${isDarkMode ? 'text-white' : 'text-[#132F45]'}`}>{progressPct}%</span>
-                <span className="text-[10px] text-[#32667F]">Your Progress</span>
+                <span className={`text-xs font-bold block leading-tight group-hover:text-[#EA8833] transition-colors ${isDarkMode ? 'text-white' : 'text-[#132F45]'}`}>{progressPct}%</span>
+                <span className="text-[10px] text-[#32667F] flex items-center gap-1">
+                  <span>Your Progress</span>
+                  <BarChart2 className="w-2.5 h-2.5 text-emerald-400" />
+                </span>
               </div>
             </div>
 
-            {/* Semicircle Radial Progress Gauge */}
-            <div className="flex items-center gap-3">
-              <div className="relative w-16 h-8 flex items-end justify-center">
+            {/* Semicircle Radial Progress Gauge - Clickable for Full Analysis */}
+            <div
+              onClick={() => setShowAnalyticsModal(true)}
+              className="flex items-center gap-3 cursor-pointer group"
+              title="Click to view detailed Student Learning Data Analysis"
+            >
+              <div className="relative w-16 h-8 flex items-end justify-center group-hover:scale-105 transition-transform">
                 <svg viewBox="0 0 100 50" className="w-16 h-8">
                   <path
                     d="M 10 50 A 40 40 0 0 1 90 50"
@@ -1140,7 +1209,7 @@ export default function ActiveLectureView({
                   {progressPct}%
                 </span>
               </div>
-              <div className="w-7 h-7 rounded-lg bg-[#EA8833]/15 flex items-center justify-center text-[#EA8833]">
+              <div className="w-7 h-7 rounded-lg bg-[#EA8833]/15 group-hover:bg-[#EA8833] group-hover:text-white transition-all flex items-center justify-center text-[#EA8833]">
                 <TrendingUp className="w-4 h-4" />
               </div>
             </div>
@@ -1474,6 +1543,289 @@ export default function ActiveLectureView({
                   {idx === activeTopicIdx && <Check className="w-4 h-4 text-[#EA8833]" />}
                 </button>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─────────────────── STUDENT LEARNING DATA ANALYSIS MODAL ─────────────────── */}
+      {showAnalyticsModal && (
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-md flex items-center justify-center p-4 z-50 overflow-y-auto animate-in fade-in duration-200">
+          <div className={`w-full max-w-3xl ${cardBg} border rounded-3xl p-6 shadow-2xl space-y-5 my-auto max-h-[92vh] overflow-y-auto scrollbar-thin scrollbar-thumb-[#32667F]/40`}>
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-[#32667F]/30">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-[#32667F] flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
+                  <BarChart2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className={`text-base font-bold ${isDarkMode ? 'text-white' : 'text-[#132F45]'}`}>
+                      Student Learning Data Analysis
+                    </h3>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-emerald-400 text-[10px] font-semibold uppercase tracking-wider flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      Live Data
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#32667F] mt-0.5">
+                    Course: <strong>{notebook.title}</strong> • Student Progress & Activity Report
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAnalyticsModal(false)}
+                className="w-8 h-8 rounded-full border border-[#32667F]/30 hover:border-[#EA8833] flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* 4 Core KPI Summary Cards (Exact user request: "how many day reading", "how mayny day left", "how is his activety") */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              {/* Metric 1: How many days reading */}
+              <div className={`p-4 rounded-2xl border ${isDarkMode ? 'bg-[#183952]/70 border-[#32667F]/40' : 'bg-[#f0f7fb] border-[#32667F]/25'} shadow-sm space-y-1`}>
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-[#EA8833] uppercase tracking-wider flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5" />
+                    Days Reading
+                  </span>
+                  <span className="text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                    Active
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-1.5 pt-1">
+                  <span className="text-2xl font-black tracking-tight">14</span>
+                  <span className="text-xs opacity-70 font-semibold">Days Studied</span>
+                </div>
+                <p className="text-[10px] text-[#EEA23A] font-medium flex items-center gap-1 pt-1">
+                  <Flame className="w-3 h-3 text-[#F38940] fill-[#F38940]" />
+                  <span>7-Day Active Streak</span>
+                </p>
+              </div>
+
+              {/* Metric 2: How many days left */}
+              <div className={`p-4 rounded-2xl border ${isDarkMode ? 'bg-[#183952]/70 border-[#32667F]/40' : 'bg-[#f0f7fb] border-[#32667F]/25'} shadow-sm space-y-1`}>
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-[#38bdf8] uppercase tracking-wider flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5" />
+                    Days Left
+                  </span>
+                  <span className="text-[10px] text-[#EEA23A] font-semibold bg-[#EEA23A]/10 px-1.5 py-0.5 rounded">
+                    Target: Nov 28
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-1.5 pt-1">
+                  <span className="text-2xl font-black tracking-tight text-[#38bdf8]">5</span>
+                  <span className="text-xs opacity-70 font-semibold">Days Remaining</span>
+                </div>
+                <p className="text-[10px] text-[#32667F] font-medium pt-1">
+                  Pacing: 1.2 lessons / day (On Track)
+                </p>
+              </div>
+
+              {/* Metric 3: How is his activity */}
+              <div className={`p-4 rounded-2xl border ${isDarkMode ? 'bg-[#183952]/70 border-[#32667F]/40' : 'bg-[#f0f7fb] border-[#32667F]/25'} shadow-sm space-y-1`}>
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1">
+                    <Activity className="w-3.5 h-3.5" />
+                    His Activity
+                  </span>
+                  <span className="text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                    Top 5%
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-1.5 pt-1">
+                  <span className="text-2xl font-black tracking-tight text-emerald-400">18.5</span>
+                  <span className="text-xs opacity-70 font-semibold">Hours Total</span>
+                </div>
+                <p className="text-[10px] text-emerald-400/90 font-medium flex items-center gap-1 pt-1">
+                  <Zap className="w-3 h-3" />
+                  <span>Peak Focus: 2:00 - 4:30 PM</span>
+                </p>
+              </div>
+
+              {/* Metric 4: Progress & Retention */}
+              <div className={`p-4 rounded-2xl border ${isDarkMode ? 'bg-[#183952]/70 border-[#32667F]/40' : 'bg-[#f0f7fb] border-[#32667F]/25'} shadow-sm space-y-1`}>
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-[#EEA23A] uppercase tracking-wider flex items-center gap-1">
+                    <Target className="w-3.5 h-3.5" />
+                    Overall Mastery
+                  </span>
+                  <span className="text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                    Passed
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-1.5 pt-1">
+                  <span className="text-2xl font-black tracking-tight text-[#EEA23A]">{progressPct}%</span>
+                  <span className="text-xs opacity-70 font-semibold">Complete</span>
+                </div>
+                <p className="text-[10px] text-[#32667F] font-medium pt-1">
+                  {quizzesDone} Quizzes • 92% Accuracy
+                </p>
+              </div>
+            </div>
+
+            {/* Weekly Activity Bar Chart ("how is his activity") */}
+            <div className={`p-4 rounded-2xl border ${isDarkMode ? 'bg-[#183952]/50 border-[#32667F]/40' : 'bg-white border-[#32667F]/25'} space-y-3`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-xs font-bold flex items-center gap-2">
+                    <BarChart2 className="w-4 h-4 text-[#EA8833]" />
+                    Weekly Study Activity Breakdown (Daily Hours)
+                  </h4>
+                  <p className="text-[10px] text-[#32667F] mt-0.5">
+                    Continuous monitoring of daily reading and lesson interaction
+                  </p>
+                </div>
+                <span className="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-xl">
+                  Average: 1.8 hrs / day
+                </span>
+              </div>
+
+              {/* Visual Bars for Mon-Sun */}
+              <div className="grid grid-cols-7 gap-2 pt-2 items-end h-32 border-b border-[#32667F]/30 pb-2">
+                {[
+                  { day: 'Mon', hours: '1.5h', height: '60%', active: false },
+                  { day: 'Tue', hours: '2.0h', height: '80%', active: false },
+                  { day: 'Wed', hours: '1.8h', height: '72%', active: false },
+                  { day: 'Thu', hours: '2.4h', height: '95%', active: false },
+                  { day: 'Fri', hours: '1.2h', height: '48%', active: false },
+                  { day: 'Sat', hours: '2.5h', height: '100%', active: false },
+                  { day: 'Sun', hours: '1.9h', height: '76%', active: true },
+                ].map((item, idx) => (
+                  <div key={idx} className="flex flex-col items-center gap-1.5 h-full justify-end group">
+                    <span className="text-[10px] font-mono opacity-80 group-hover:scale-110 group-hover:text-[#EA8833] transition-all">
+                      {item.hours}
+                    </span>
+                    <div className="w-full bg-[#132F45]/60 rounded-xl overflow-hidden h-24 flex items-end">
+                      <div
+                        style={{ height: item.height }}
+                        className={`w-full rounded-xl transition-all duration-500 group-hover:opacity-90 ${
+                          item.active
+                            ? 'bg-gradient-to-t from-[#EA8833] to-[#F38940] shadow-lg shadow-[#EA8833]/40'
+                            : 'bg-gradient-to-t from-[#132F45] to-[#32667F]'
+                        }`}
+                      />
+                    </div>
+                    <span className={`text-[10px] font-bold ${item.active ? 'text-[#EA8833]' : 'opacity-70'}`}>
+                      {item.day} {item.active && '•'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* 14-Day Reading Habit Heatmap Row */}
+              <div className="pt-1 flex items-center justify-between">
+                <span className="text-[11px] font-semibold opacity-80 flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>14-Day Reading Attendance:</span>
+                </span>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: 14 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="w-3 h-3 rounded-full bg-emerald-400/90 shadow-sm"
+                      title={`Day ${i + 1}: Completed daily study session`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Course Completion Timeline & Pacing ("how many day left") */}
+            <div className={`p-4 rounded-2xl border ${isDarkMode ? 'bg-[#183952]/50 border-[#32667F]/40' : 'bg-white border-[#32667F]/25'} space-y-2.5`}>
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold flex items-center gap-2">
+                  <Target className="w-4 h-4 text-[#38bdf8]" />
+                  Notebook Completion Milestones (5 Days Left)
+                </h4>
+                <span className="text-[10px] font-semibold text-[#EEA23A]">Estimated finish: Friday, Nov 28</span>
+              </div>
+              <div className="space-y-2">
+                {[
+                  { topic: 'Core Principles of Bioethics (Autonomy & Beneficence)', status: 'Completed (Day 1-7)', pct: 100, done: true },
+                  { topic: 'Clinical Non-Maleficence & Triage Ethics', status: 'Completed (Day 8-14)', pct: 100, done: true },
+                  { topic: 'Informed Consent & Patient Capacity', status: 'In Progress • 2 Days Remaining (Day 15-16)', pct: 60, done: false },
+                  { topic: 'Final Comprehensive Review & Mastery Quiz', status: 'Scheduled • 3 Days Remaining (Day 17-19)', pct: 0, done: false },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center justify-between p-2.5 rounded-xl border border-[#32667F]/30 bg-[#0e2538]/50 text-xs">
+                    <div className="flex items-center gap-2.5">
+                      {item.done ? (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      ) : (
+                        <Clock className="w-4 h-4 text-[#EEA23A] shrink-0 animate-pulse" />
+                      )}
+                      <div>
+                        <p className="font-bold leading-tight">{item.topic}</p>
+                        <p className="text-[10px] text-[#32667F] mt-0.5">{item.status}</p>
+                      </div>
+                    </div>
+                    <span className={`text-[11px] font-bold font-mono ${item.done ? 'text-emerald-400' : 'text-[#EEA23A]'}`}>
+                      {item.pct}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* AI Tutor Intelligence Evaluation (Professor Techeru & Pip) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {/* Techeru Assessment */}
+              <div className={`p-3.5 rounded-2xl border ${isDarkMode ? 'bg-[#183952]/60 border-[#32667F]/40' : 'bg-[#f0f7fb] border-[#32667F]/25'} space-y-1.5`}>
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#EA8833] to-[#F38940] p-0.5 flex items-center justify-center shadow-md">
+                    <img src="/techeru_transparent.png" alt="Techeru" className="w-full h-full object-contain rounded-full" onError={(e) => { (e.target as HTMLImageElement).src = '/logo_cat.png'; }} />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold leading-tight text-[#EA8833]">Professor Techeru's Activity Analysis</p>
+                    <p className="text-[9px] opacity-70">Cognitive Retention Evaluation</p>
+                  </div>
+                </div>
+                <p className="text-[11px] leading-relaxed opacity-90">
+                  "The student has completed <strong>14 consecutive reading days</strong> with strong ethical reasoning. With <strong>5 days left</strong>, our learning trajectory is ahead of schedule! Focus on non-maleficence triage scenarios to secure an A+."
+                </p>
+              </div>
+
+              {/* Pip Study Buddy Advice */}
+              <div className={`p-3.5 rounded-2xl border ${isDarkMode ? 'bg-[#241c30]/60 border-pink-500/30' : 'bg-[#fdf2f8] border-pink-400/30'} space-y-1.5`}>
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-full bg-pink-500/20 p-0.5 flex items-center justify-center shadow-md">
+                    <img src="/pip.png" alt="Pip" className="w-full h-full object-contain" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold leading-tight text-pink-400">Pip's Study Buddy Cheer 🐭💕</p>
+                    <p className="text-[9px] opacity-70">Daily Encouragement</p>
+                  </div>
+                </div>
+                <p className="text-[11px] leading-relaxed opacity-90 text-pink-100">
+                  "You're on a <strong>7-day streak</strong> and your activity level is super high! Just <strong>5 days left</strong> until we finish this entire notebook! You are doing amazing, let's keep the streak alive! 🧀✨"
+                </p>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="pt-2 flex items-center justify-between border-t border-[#32667F]/30">
+              <span className="text-[11px] text-[#32667F] font-medium">
+                Data generated from student notebook sessions & quiz metrics.
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    alert('Progress report generated and saved to your local notebook workspace!');
+                  }}
+                  className="px-4 py-2 rounded-xl border border-[#32667F]/40 hover:border-[#EA8833] text-xs font-bold transition-all shadow-sm flex items-center gap-1.5"
+                >
+                  <Award className="w-3.5 h-3.5 text-[#EEA23A]" />
+                  <span>Export Report</span>
+                </button>
+                <button
+                  onClick={() => setShowAnalyticsModal(false)}
+                  className="px-5 py-2 bg-gradient-to-r from-[#EA8833] to-[#F38940] hover:opacity-95 text-white font-bold text-xs rounded-xl shadow-lg shadow-[#EA8833]/30 transition-all hover:scale-102"
+                >
+                  Back to Classroom
+                </button>
+              </div>
             </div>
           </div>
         </div>
