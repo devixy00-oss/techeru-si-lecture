@@ -45,6 +45,8 @@ import {
   Target,
   Award,
   Zap,
+  Upload,
+  FolderPlus,
 } from 'lucide-react';
 import FlashcardDeck from './FlashcardDeck';
 import { speechManager } from '@/audio/SpeechManager';
@@ -114,6 +116,44 @@ export default function ActiveLectureView({
   const [showNotifications, setShowNotifications] = useState(false);
   const [showKeyPointsModal, setShowKeyPointsModal] = useState(false);
   const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [showAddSourceModal, setShowAddSourceModal] = useState(false);
+
+  // Dynamic Sources List
+  const [sourcesList, setSourcesList] = useState<NotebookSource[]>(notebook.sources || []);
+  const [isUploadingSource, setIsUploadingSource] = useState(false);
+  const [sourceUploadToast, setSourceUploadToast] = useState(false);
+
+  // Add Source Handler
+  const handleAddSource = (fileName: string, fileSize: string) => {
+    setIsUploadingSource(true);
+    setTimeout(() => {
+      const newSrc: NotebookSource = {
+        id: `src-${Date.now()}`,
+        name: fileName,
+        size: fileSize,
+        type: fileName.split('.').pop() || 'pdf',
+        uploadedAt: 'Today',
+      };
+      setSourcesList((prev) => [newSrc, ...prev]);
+      setIsUploadingSource(false);
+      setShowAddSourceModal(false);
+      setSourceUploadToast(true);
+      setTimeout(() => setSourceUploadToast(false), 3000);
+
+      // Add announcement to chat
+      setConversation((prev) => [
+        ...prev,
+        {
+          id: `msg-${Date.now()}`,
+          sender: 'techeru',
+          text: `📄 New source **${fileName}** (${fileSize}) has been uploaded and indexed! I've extracted the key concepts into our active classroom knowledge base.`,
+          time: 'Now',
+          hasAudio: true,
+        },
+      ]);
+    }, 800);
+  };
 
   // Refresh classroom state
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -642,26 +682,36 @@ export default function ActiveLectureView({
 
           {/* Bottom Area: Promo Card + Pip Character */}
           <div className="pt-4 flex flex-col items-center relative">
-            {/* Promo Card */}
-            {showPromo && (
-              <div className="w-full bg-gradient-to-r from-[#132F45] to-[#32667F]/70 border border-[#EEA23A]/40 rounded-2xl p-3 mb-4 shadow-xl relative overflow-hidden">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[#EEA23A] text-sm">👑</span>
-                    <span className="text-[11px] font-bold text-white tracking-wide">
-                      Learn Smarter
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => setShowPromo(false)}
-                    className="text-gray-300 hover:text-white text-xs leading-none"
-                  >
-                    ✕
-                  </button>
+            {/* Join Premium Card (User requested: "do this be join perimum button") */}
+            <div
+              onClick={() => setShowPremiumModal(true)}
+              className="w-full cursor-pointer bg-gradient-to-br from-[#132F45] via-[#1a3d5a] to-[#254f6e] border border-[#EEA23A]/50 hover:border-[#EA8833] rounded-2xl p-3 mb-4 shadow-xl hover:shadow-2xl hover:scale-102 transition-all relative overflow-hidden group select-none"
+              title="Join Techeru SI Premium"
+            >
+              {/* Subtle Ambient Glow */}
+              <div className="w-20 h-20 bg-[#EA8833]/20 rounded-full blur-xl absolute -top-5 -right-5 pointer-events-none group-hover:bg-[#EA8833]/30 transition-all" />
+
+              <div className="flex items-center justify-between mb-1.5 relative z-10">
+                <div className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-lg bg-gradient-to-tr from-[#EA8833] to-[#F38940] flex items-center justify-center text-white text-xs shadow-md">
+                    👑
+                  </span>
+                  <span className="text-xs font-bold text-white tracking-wide group-hover:text-[#EEA23A] transition-colors">
+                    Join Premium
+                  </span>
                 </div>
-                <p className="text-[10px] text-gray-200 font-medium">with Techeru SI!</p>
+                <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-gradient-to-r from-[#EA8833] to-[#F38940] text-white shadow-sm">
+                  PRO
+                </span>
               </div>
-            )}
+              <p className="text-[10px] text-gray-300 font-medium line-clamp-2 relative z-10">
+                Unlock Unlimited 3D Classes, AI Voice & Document Ingestion
+              </p>
+              <div className="mt-2 w-full py-1.5 rounded-xl bg-gradient-to-r from-[#EA8833] via-[#EEA23A] to-[#F38940] text-white text-[11px] font-bold flex items-center justify-center gap-1.5 shadow-md shadow-[#EA8833]/30 group-hover:opacity-95 relative z-10">
+                <Sparkles className="w-3 h-3 animate-pulse" />
+                <span>Join Premium</span>
+              </div>
+            </div>
 
             {/* Pip The Mouse Section with 100% Transparent Background */}
             <div className="w-full flex items-end justify-start relative pt-2">
@@ -713,13 +763,25 @@ export default function ActiveLectureView({
                     {notebook.title}
                   </h1>
                   <p className="text-xs text-[#32667F] font-medium mt-0.5">
-                    {notebook.sourcesCount} Sources • {notebook.date}
+                    {sourcesList.length} Sources • {notebook.date}
                   </p>
                 </div>
               </div>
 
               {/* Action Buttons */}
               <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowAddSourceModal(true)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all ${
+                    isDarkMode
+                      ? 'bg-[#183952] border-[#32667F]/50 text-gray-200 hover:border-[#EA8833]'
+                      : 'bg-[#f0f7fb] border-[#32667F]/30 text-[#132F45] hover:border-[#EA8833]'
+                  }`}
+                  title="Upload New Learning Material"
+                >
+                  <Plus className="w-3.5 h-3.5 text-[#EA8833]" />
+                  <span>Add Source</span>
+                </button>
                 {onOpenLiveClass && (
                   <button
                     onClick={onOpenLiveClass}
@@ -1315,15 +1377,16 @@ export default function ActiveLectureView({
                 <span>Give Examples</span>
               </button>
               <button
-                onClick={() => handleQuickAction('quiz')}
+                onClick={() => setShowAddSourceModal(true)}
                 className={`flex items-center justify-center gap-1.5 p-2.5 rounded-xl border text-[11px] font-semibold transition-all shadow-sm ${
                   isDarkMode
                     ? 'bg-[#183952] hover:bg-[#204a69] border-[#32667F]/40 text-gray-200'
                     : 'bg-white hover:bg-[#f0f7fb] border-[#32667F]/30 text-[#132F45]'
                 }`}
+                title="Add New Learning Material (PDF, DOCX, PPT)"
               >
-                <Trophy className="w-3 h-3 text-[#F38940]" />
-                <span>Start a Quiz</span>
+                <Plus className="w-3.5 h-3.5 text-[#EA8833]" />
+                <span>Add Source</span>
               </button>
               <button
                 onClick={() => handleQuickAction('nextTopic')}
@@ -1455,13 +1518,25 @@ export default function ActiveLectureView({
                   Notebook Sources: {notebook.title}
                 </h3>
               </div>
-              <button onClick={() => setShowSourcesModal(false)} className="text-gray-400 hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setShowSourcesModal(false);
+                    setShowAddSourceModal(true);
+                  }}
+                  className="px-3 py-1 rounded-xl bg-gradient-to-r from-[#EA8833] to-[#F38940] text-white text-xs font-bold flex items-center gap-1 shadow-sm hover:opacity-90"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add New</span>
+                </button>
+                <button onClick={() => setShowSourcesModal(false)} className="text-gray-400 hover:text-white">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
-              {notebook.sources.map((src) => (
+              {sourcesList.map((src) => (
                 <div
                   key={src.id}
                   className="bg-[#183952]/40 border border-[#32667F]/30 rounded-2xl p-3 flex items-center justify-between"
@@ -1826,6 +1901,178 @@ export default function ActiveLectureView({
                   Back to Classroom
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─────────────────── JOIN PREMIUM MODAL ─────────────────── */}
+      {showPremiumModal && (
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+          <div className={`w-full max-w-lg ${cardBg} border rounded-3xl p-6 shadow-2xl space-y-5 relative overflow-hidden`}>
+            {/* Top decorative glow */}
+            <div className="w-64 h-64 bg-gradient-to-tr from-[#EA8833]/30 to-[#F38940]/30 rounded-full blur-3xl absolute -top-20 -right-20 pointer-events-none" />
+
+            <div className="flex items-center justify-between pb-3 border-b border-[#32667F]/30 relative z-10">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-[#EA8833] via-[#EEA23A] to-[#F38940] flex items-center justify-center text-white text-xl shadow-lg shadow-[#EA8833]/40">
+                  👑
+                </div>
+                <div>
+                  <h3 className={`text-base font-bold ${isDarkMode ? 'text-white' : 'text-[#132F45]'}`}>
+                    Techeru SI Premium
+                  </h3>
+                  <p className="text-xs text-[#32667F]">
+                    Unlock your full AI digital classroom potential
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowPremiumModal(false)}
+                className="w-8 h-8 rounded-full border border-[#32667F]/30 hover:border-[#EA8833] flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Premium Perks Grid */}
+            <div className="space-y-2.5 relative z-10">
+              {[
+                { title: 'Unlimited 3D Live Classes', desc: 'Real-time camera & microphone lectures with Professor Techeru' },
+                { title: 'Pip AI 24/7 Companion', desc: 'Instant study tips, simplified analogies, and quiz coaching' },
+                { title: 'Unlimited Source Ingestion', desc: 'Upload unlimited PDFs, DOCX, slide decks, and audio recordings' },
+                { title: 'Priority Gemini AI Engine', desc: 'Ultra-fast step-by-step reasoning and instant flashcard generation' },
+                { title: 'Official Course Certificates', desc: 'Download accredited completion credentials for your portfolio' },
+              ].map((perk, idx) => (
+                <div key={idx} className="flex items-start gap-3 p-2.5 rounded-xl bg-[#183952]/40 border border-[#32667F]/30">
+                  <div className="w-5 h-5 rounded-full bg-[#EA8833]/20 border border-[#EA8833] flex items-center justify-center shrink-0 mt-0.5">
+                    <Check className="w-3 h-3 text-[#EA8833] stroke-[3]" />
+                  </div>
+                  <div>
+                    <strong className="text-xs font-bold text-white block">{perk.title}</strong>
+                    <span className="text-[10px] text-gray-300">{perk.desc}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Pricing Card */}
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-[#183952] to-[#132F45] border border-[#EEA23A]/40 flex items-center justify-between relative z-10">
+              <div>
+                <span className="text-[10px] uppercase font-bold text-[#EEA23A] tracking-wider">Special Student Plan</span>
+                <div className="flex items-baseline gap-1 mt-0.5">
+                  <span className="text-2xl font-black text-white">$9.99</span>
+                  <span className="text-xs text-gray-400">/ month</span>
+                </div>
+                <span className="text-[10px] text-emerald-400 font-medium">Cancel anytime • 7-day free trial</span>
+              </div>
+              <button
+                onClick={() => {
+                  alert('🎉 Welcome to Techeru SI Premium! All Pro features are now unlocked for your account.');
+                  setShowPremiumModal(false);
+                }}
+                className="px-5 py-2.5 bg-gradient-to-r from-[#EA8833] via-[#EEA23A] to-[#F38940] hover:opacity-90 text-white font-bold text-xs rounded-xl shadow-lg shadow-[#EA8833]/30 transition-all hover:scale-105 active:scale-95"
+              >
+                Join Premium Now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─────────────────── ADD SOURCE MODAL ─────────────────── */}
+      {showAddSourceModal && (
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+          <div className={`w-full max-w-lg ${cardBg} border rounded-3xl p-6 shadow-2xl space-y-4`}>
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-[#32667F]/30">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-[#EA8833]/20 border border-[#EA8833]/40 flex items-center justify-center text-[#EA8833]">
+                  <FolderPlus className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className={`text-base font-bold ${isDarkMode ? 'text-white' : 'text-[#132F45]'}`}>
+                    Add Learning Material
+                  </h3>
+                  <p className="text-xs text-[#32667F]">
+                    Attach new sources to <strong>{notebook.title}</strong>
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAddSourceModal(false)}
+                className="w-8 h-8 rounded-full border border-[#32667F]/30 hover:border-[#EA8833] flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Drag and Drop Upload Dropzone */}
+            <label className="border-2 border-dashed border-[#32667F]/60 hover:border-[#EA8833] rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-colors bg-[#0e2538]/40 hover:bg-[#0e2538]/70 group">
+              <Upload className="w-8 h-8 text-[#EA8833] mb-2 group-hover:scale-110 transition-transform animate-pulse" />
+              <p className="text-xs font-bold text-white mb-1">
+                Drop your PDF, Word DOCX, PPT, or Audio file here
+              </p>
+              <p className="text-[10px] text-[#32667F]">
+                Supports up to 50MB • Automatically indexed by Professor Techeru
+              </p>
+              <input
+                type="file"
+                className="hidden"
+                accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.mp3"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    handleAddSource(file.name, `${(file.size / 1024 / 1024).toFixed(1)} MB`);
+                  }
+                }}
+              />
+            </label>
+
+            {/* Quick Sample Materials to 1-Click Ingest */}
+            <div className="space-y-2">
+              <span className="text-[10px] uppercase font-bold text-[#32667F] tracking-wider block">
+                Quick Add Recommended Study Materials:
+              </span>
+              {[
+                { name: 'Clinical_Ethics_Case_Studies_2026.pdf', size: '2.1 MB' },
+                { name: 'Patient_Rights_And_Informed_Consent.docx', size: '1.4 MB' },
+                { name: 'Hospital_Bioethics_Committee_Guidelines.pdf', size: '3.2 MB' },
+              ].map((sample, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleAddSource(sample.name, sample.size)}
+                  className={`w-full p-2.5 rounded-xl border flex items-center justify-between text-left transition-all ${
+                    isDarkMode
+                      ? 'bg-[#183952]/40 hover:bg-[#183952] border-[#32667F]/30 hover:border-[#EA8833]'
+                      : 'bg-[#f0f7fb] hover:bg-[#e2edf5] border-[#32667F]/25 hover:border-[#EA8833]'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <FileText className="w-4 h-4 text-[#EA8833]" />
+                    <div>
+                      <p className="text-xs font-semibold">{sample.name}</p>
+                      <span className="text-[10px] text-[#32667F]">{sample.size}</span>
+                    </div>
+                  </div>
+                  <span className="text-[11px] font-bold text-[#EA8833] flex items-center gap-1">
+                    <Plus className="w-3.5 h-3.5" /> Add
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {/* Footer Buttons */}
+            <div className="pt-2 flex items-center justify-between border-t border-[#32667F]/30">
+              <span className="text-[10px] text-[#32667F]">
+                Currently {sourcesList.length} sources indexed
+              </span>
+              <button
+                onClick={() => setShowAddSourceModal(false)}
+                className="px-5 py-2 bg-gradient-to-r from-[#EA8833] to-[#F38940] hover:opacity-95 text-white font-bold text-xs rounded-xl shadow-md transition-all"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
