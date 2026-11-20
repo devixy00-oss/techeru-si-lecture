@@ -47,6 +47,8 @@ import {
   Zap,
   Upload,
   FolderPlus,
+  Crown,
+  PieChart,
 } from 'lucide-react';
 import FlashcardDeck from './FlashcardDeck';
 import { speechManager } from '@/audio/SpeechManager';
@@ -87,6 +89,28 @@ export interface NotebookData {
   progressPercent: number;
 }
 
+export interface SubjectAnalyticsItem {
+  id: string;
+  name: string;
+  category: string;
+  hours: number;
+  pctShare: number;
+  mastery: number;
+  rank: number;
+  isMostLearned: boolean;
+  lessonsDone: number;
+  totalLessons: number;
+  quizzesPassed: number;
+  totalQuizzes: number;
+  streak: string;
+  status: 'Most Learned' | 'Active' | 'In Progress' | 'Reviewing';
+  color: string;
+  borderColor: string;
+  badgeBg: string;
+  description: string;
+  keyTopics: string[];
+}
+
 interface ActiveLectureViewProps {
   notebook: NotebookData;
   onEndClass: () => void;
@@ -118,6 +142,105 @@ export default function ActiveLectureView({
   const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showAddSourceModal, setShowAddSourceModal] = useState(false);
+
+  // Student Subject Analytics State (User request: "which subject learnt", "which subjust most learn and etc")
+  const [subjectFilter, setSubjectFilter] = useState<'all' | 'most-learned' | 'in-progress'>('all');
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string>('ethics');
+
+  const subjectAnalyticsList: SubjectAnalyticsItem[] = [
+    {
+      id: 'ethics',
+      name: notebook.title.includes('Health') ? notebook.title : 'Health Care Ethics & Bioethics',
+      category: 'Clinical Ethics',
+      hours: 8.5,
+      pctShare: 46,
+      mastery: 96,
+      rank: 1,
+      isMostLearned: true,
+      lessonsDone: 6,
+      totalLessons: 6,
+      quizzesPassed: 4,
+      totalQuizzes: 4,
+      streak: '7 days',
+      status: 'Most Learned',
+      color: 'from-[#EA8833] to-[#F38940]',
+      borderColor: 'border-[#EA8833]/60',
+      badgeBg: 'bg-[#EA8833]/15 text-[#EA8833] border-[#EA8833]/30',
+      description: 'Patient autonomy, beneficence, non-maleficence, justice, and informed consent in clinical practice.',
+      keyTopics: ['Autonomy & Patient Rights', 'Beneficence & Non-Maleficence', 'Triage Dilemmas', 'Informed Consent'],
+    },
+    {
+      id: 'nursing',
+      name: 'Nursing Fundamentals & Clinical ADPIE',
+      category: 'Clinical Practice',
+      hours: 5.2,
+      pctShare: 28,
+      mastery: 88,
+      rank: 2,
+      isMostLearned: false,
+      lessonsDone: 4,
+      totalLessons: 5,
+      quizzesPassed: 3,
+      totalQuizzes: 3,
+      streak: '4 days',
+      status: 'Active',
+      color: 'from-[#32667F] to-[#38bdf8]',
+      borderColor: 'border-[#38bdf8]/40',
+      badgeBg: 'bg-[#38bdf8]/15 text-[#38bdf8] border-[#38bdf8]/30',
+      description: 'Assessment, diagnosis, planning, implementation, and evaluation care cycle for bedside patient care.',
+      keyTopics: ['Vital Signs & Assessment', 'ADPIE Nursing Care Plans', 'Patient Safety Protocols'],
+    },
+    {
+      id: 'ai-health',
+      name: 'Applied AI & Medical Informatics',
+      category: 'Health Tech',
+      hours: 3.1,
+      pctShare: 17,
+      mastery: 75,
+      rank: 3,
+      isMostLearned: false,
+      lessonsDone: 3,
+      totalLessons: 4,
+      quizzesPassed: 2,
+      totalQuizzes: 3,
+      streak: '2 days',
+      status: 'In Progress',
+      color: 'from-purple-500 to-indigo-500',
+      borderColor: 'border-purple-500/40',
+      badgeBg: 'bg-purple-500/15 text-purple-400 border-purple-500/30',
+      description: 'Diagnostic AI models, electronic health records (EHR) systems, and algorithm compliance.',
+      keyTopics: ['Clinical AI Decision Support', 'EHR Interoperability', 'Data Privacy in AI Models'],
+    },
+    {
+      id: 'terminology',
+      name: 'Medical Terminology & HIPAA Compliance',
+      category: 'Regulatory & Foundations',
+      hours: 1.7,
+      pctShare: 9,
+      mastery: 70,
+      rank: 4,
+      isMostLearned: false,
+      lessonsDone: 2,
+      totalLessons: 3,
+      quizzesPassed: 1,
+      totalQuizzes: 2,
+      streak: '1 day',
+      status: 'Reviewing',
+      color: 'from-emerald-500 to-teal-400',
+      borderColor: 'border-emerald-500/40',
+      badgeBg: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+      description: 'Root prefixes/suffixes, clinical documentation standards, and HIPAA patient privacy compliance.',
+      keyTopics: ['Greek & Latin Roots', 'HIPAA Privacy Safeguards', 'Clinical Abbreviations'],
+    },
+  ];
+
+  const mostLearnedSubject = subjectAnalyticsList.find((s) => s.isMostLearned) || subjectAnalyticsList[0];
+
+  const filteredSubjects = subjectAnalyticsList.filter((s) => {
+    if (subjectFilter === 'most-learned') return s.isMostLearned;
+    if (subjectFilter === 'in-progress') return s.status === 'In Progress' || s.status === 'Reviewing';
+    return true;
+  });
 
   // Dynamic Sources List
   const [sourcesList, setSourcesList] = useState<NotebookSource[]>(notebook.sources || []);
@@ -1218,6 +1341,26 @@ export default function ActiveLectureView({
               </div>
             </div>
 
+            {/* Top Learned Subject Badge (Quick preview, clicks to open full analysis) */}
+            <div
+              onClick={() => setShowAnalyticsModal(true)}
+              className="hidden md:flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#EA8833]/15 to-[#F38940]/10 border border-[#EA8833]/30 cursor-pointer group hover:bg-[#EA8833]/25 transition-all shadow-xs"
+              title="Top Learned Subject: Health Care Ethics (8.5h Studied, 96% Mastery) - Click for detailed student analysis"
+            >
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#EA8833] to-[#F38940] flex items-center justify-center text-white shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+                <Crown className="w-4 h-4 fill-amber-100 text-white" />
+              </div>
+              <div className="text-left leading-tight">
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] font-black text-[#EA8833] uppercase tracking-wider">Top Subject</span>
+                  <span className="text-[8px] text-emerald-400 font-extrabold bg-emerald-500/20 px-1 rounded">#1</span>
+                </div>
+                <span className={`text-[11px] font-bold block truncate max-w-[120px] group-hover:text-[#EA8833] transition-colors ${isDarkMode ? 'text-white' : 'text-[#132F45]'}`}>
+                  {mostLearnedSubject.name.split('&')[0].trim()}
+                </span>
+              </div>
+            </div>
+
             {/* Progress Star - Clickable for Full Analysis */}
             <div
               onClick={() => setShowAnalyticsModal(true)}
@@ -1626,7 +1769,7 @@ export default function ActiveLectureView({
       {/* ─────────────────── STUDENT LEARNING DATA ANALYSIS MODAL ─────────────────── */}
       {showAnalyticsModal && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-md flex items-center justify-center p-4 z-50 overflow-y-auto animate-in fade-in duration-200">
-          <div className={`w-full max-w-3xl ${cardBg} border rounded-3xl p-6 shadow-2xl space-y-5 my-auto max-h-[92vh] overflow-y-auto scrollbar-thin scrollbar-thumb-[#32667F]/40`}>
+          <div className={`w-full max-w-4xl ${cardBg} border rounded-3xl p-6 shadow-2xl space-y-5 my-auto max-h-[92vh] overflow-y-auto scrollbar-thin scrollbar-thumb-[#32667F]/40`}>
             {/* Modal Header */}
             <div className="flex items-center justify-between pb-3 border-b border-[#32667F]/30">
               <div className="flex items-center gap-3">
@@ -1644,7 +1787,7 @@ export default function ActiveLectureView({
                     </span>
                   </div>
                   <p className="text-xs text-[#32667F] mt-0.5">
-                    Course: <strong>{notebook.title}</strong> • Student Progress & Activity Report
+                    Course: <strong>{notebook.title}</strong> • Student Progress & Subject Performance Report
                   </p>
                 </div>
               </div>
@@ -1738,6 +1881,227 @@ export default function ActiveLectureView({
                 <p className="text-[10px] text-[#32667F] font-medium pt-1">
                   {quizzesDone} Quizzes • 92% Accuracy
                 </p>
+              </div>
+            </div>
+
+            {/* ─────────────────── 1. MOST LEARNED SUBJECT SPOTLIGHT (User Request: "which subjust most learn") ─────────────────── */}
+            <div className={`p-4.5 rounded-2xl border ${isDarkMode ? 'bg-gradient-to-r from-[#183952]/90 via-[#132F45] to-[#183952]/90 border-[#EA8833]/60 shadow-lg shadow-[#EA8833]/15' : 'bg-gradient-to-r from-[#fff7ed] via-[#ffedd5]/50 to-[#fff7ed] border-[#EA8833]/50'} relative overflow-hidden space-y-3`}>
+              {/* Subtle Ambient Glow */}
+              <div className="absolute -top-10 -right-10 w-44 h-44 bg-[#EA8833]/20 rounded-full blur-2xl pointer-events-none" />
+
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10">
+                <div className="flex items-start sm:items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#EA8833] via-[#EEA23A] to-[#F38940] flex items-center justify-center text-white shadow-md shadow-[#EA8833]/30 shrink-0">
+                    <Crown className="w-6 h-6 fill-amber-100 text-white" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-gradient-to-r from-[#EA8833] to-[#F38940] text-white shadow-sm flex items-center gap-1">
+                        <Trophy className="w-3 h-3 fill-white" />
+                        #1 Most Learned Subject
+                      </span>
+                      <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" />
+                        Highest Retention ({mostLearnedSubject.mastery}%)
+                      </span>
+                    </div>
+                    <h4 className="text-base font-black tracking-tight mt-1 text-[#EA8833]">
+                      {mostLearnedSubject.name}
+                    </h4>
+                    <p className="text-[11px] text-[#32667F] dark:text-[#a0c4d9]">
+                      {mostLearnedSubject.category} • Top student focus with greatest conceptual mastery and quiz performance
+                    </p>
+                  </div>
+                </div>
+
+                {/* Quick KPI stats box */}
+                <div className="flex items-center gap-3 bg-[#132F45]/80 dark:bg-[#0c2233]/90 border border-[#32667F]/40 p-2.5 rounded-2xl shrink-0 self-start sm:self-auto shadow-inner">
+                  <div className="text-center px-2">
+                    <span className="text-lg font-black text-[#EA8833] block leading-none">{mostLearnedSubject.hours}h</span>
+                    <span className="text-[9px] text-[#8fb5cc] uppercase font-bold tracking-wider">Time Spent</span>
+                  </div>
+                  <div className="h-8 w-[1px] bg-[#32667F]/40" />
+                  <div className="text-center px-2">
+                    <span className="text-lg font-black text-emerald-400 block leading-none">{mostLearnedSubject.pctShare}%</span>
+                    <span className="text-[9px] text-[#8fb5cc] uppercase font-bold tracking-wider">Time Share</span>
+                  </div>
+                  <div className="h-8 w-[1px] bg-[#32667F]/40" />
+                  <div className="text-center px-2">
+                    <span className="text-lg font-black text-[#38bdf8] block leading-none">{mostLearnedSubject.lessonsDone}/{mostLearnedSubject.totalLessons}</span>
+                    <span className="text-[9px] text-[#8fb5cc] uppercase font-bold tracking-wider">Lessons Done</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Progress meter & key concepts */}
+              <div className="pt-2 border-t border-[#32667F]/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs relative z-10">
+                <div className="flex items-center gap-2.5 w-full sm:w-auto">
+                  <span className="text-[11px] font-bold text-[#EA8833] whitespace-nowrap">Subject Mastery:</span>
+                  <div className="w-full sm:w-52 bg-[#0c2233] rounded-full h-2.5 overflow-hidden border border-[#32667F]/40">
+                    <div className="h-full bg-gradient-to-r from-[#EA8833] to-[#F38940] rounded-full transition-all duration-700" style={{ width: `${mostLearnedSubject.mastery}%` }} />
+                  </div>
+                  <span className="text-[11px] font-black text-[#EA8833]">{mostLearnedSubject.mastery}%</span>
+                </div>
+                <div className="text-[10px] text-[#32667F] dark:text-[#8fb5cc] flex items-center gap-1.5 flex-wrap">
+                  <span className="font-semibold text-white/90">Mastered Principles:</span>
+                  {mostLearnedSubject.keyTopics.map((tpc, i) => (
+                    <span key={i} className="bg-[#132F45] border border-[#32667F]/40 px-2 py-0.5 rounded-md text-[10px] text-gray-200">
+                      {tpc}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* ─────────────────── 2. SUBJECTS LEARNT & TIME DISTRIBUTION (User Request: "which subject learnt ... and etc") ─────────────────── */}
+            <div className={`p-4 rounded-2xl border ${isDarkMode ? 'bg-[#183952]/50 border-[#32667F]/40' : 'bg-white border-[#32667F]/25'} space-y-3`}>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <h4 className="text-xs font-bold flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-[#38bdf8]" />
+                    <span>Subjects Learnt & Study Time Distribution ({subjectAnalyticsList.length} Subjects Total)</span>
+                  </h4>
+                  <p className="text-[10px] text-[#32667F] mt-0.5">
+                    Complete learning audit showing hours invested, quiz accuracy, and mastery progression across all subjects
+                  </p>
+                </div>
+
+                {/* Filter Tabs */}
+                <div className="flex items-center gap-1 bg-[#132F45]/80 p-1 rounded-xl border border-[#32667F]/40 self-start sm:self-auto text-[10px]">
+                  <button
+                    onClick={() => setSubjectFilter('all')}
+                    className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+                      subjectFilter === 'all'
+                        ? 'bg-gradient-to-r from-[#EA8833] to-[#F38940] text-white shadow-sm'
+                        : 'text-gray-300 hover:text-white'
+                    }`}
+                  >
+                    All Subjects ({subjectAnalyticsList.length})
+                  </button>
+                  <button
+                    onClick={() => setSubjectFilter('most-learned')}
+                    className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+                      subjectFilter === 'most-learned'
+                        ? 'bg-gradient-to-r from-[#EA8833] to-[#F38940] text-white shadow-sm'
+                        : 'text-gray-300 hover:text-white'
+                    }`}
+                  >
+                    👑 Most Learned
+                  </button>
+                  <button
+                    onClick={() => setSubjectFilter('in-progress')}
+                    className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+                      subjectFilter === 'in-progress'
+                        ? 'bg-gradient-to-r from-[#EA8833] to-[#F38940] text-white shadow-sm'
+                        : 'text-gray-300 hover:text-white'
+                    }`}
+                  >
+                    In Progress (2)
+                  </button>
+                </div>
+              </div>
+
+              {/* Proportional Time Allocation Stacked Bar */}
+              <div className="space-y-1.5 pt-1">
+                <div className="flex items-center justify-between text-[10px] font-bold">
+                  <span className="text-[#32667F] uppercase tracking-wider flex items-center gap-1">
+                    <Clock className="w-3 h-3 text-[#EA8833]" />
+                    <span>18.5 Total Hours Across Enrolled Subjects:</span>
+                  </span>
+                  <span className="text-[#EA8833] font-mono">100% Time Allocation</span>
+                </div>
+                <div className="w-full h-3 rounded-xl overflow-hidden flex bg-[#0c2233] border border-[#32667F]/40 p-0.5 gap-0.5">
+                  <div style={{ width: '46%' }} className="h-full bg-gradient-to-r from-[#EA8833] to-[#F38940] rounded-sm transition-all duration-500" title="Health Care Ethics: 8.5h (46%)" />
+                  <div style={{ width: '28%' }} className="h-full bg-gradient-to-r from-[#32667F] to-[#38bdf8] rounded-sm transition-all duration-500" title="Nursing Fundamentals: 5.2h (28%)" />
+                  <div style={{ width: '17%' }} className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-sm transition-all duration-500" title="Applied AI: 3.1h (17%)" />
+                  <div style={{ width: '9%' }} className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-sm transition-all duration-500" title="Medical Terminology: 1.7h (9%)" />
+                </div>
+
+                {/* Subject Color Legend */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-[10px]">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#EA8833] shrink-0" />
+                    <span className="truncate font-semibold">Ethics (8.5h • 46%)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#38bdf8] shrink-0" />
+                    <span className="truncate font-semibold">Nursing (5.2h • 28%)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-purple-400 shrink-0" />
+                    <span className="truncate font-semibold">Applied AI (3.1h • 17%)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0" />
+                    <span className="truncate font-semibold">Terminology (1.7h • 9%)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Subject Breakdown Cards Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                {filteredSubjects.map((subj) => (
+                  <div
+                    key={subj.id}
+                    className={`p-3.5 rounded-2xl border transition-all duration-200 ${
+                      subj.isMostLearned
+                        ? 'bg-[#183952]/90 border-[#EA8833]/60 shadow-md shadow-[#EA8833]/10'
+                        : isDarkMode
+                        ? 'bg-[#132F45]/60 border-[#32667F]/40 hover:border-[#32667F]'
+                        : 'bg-white border-[#32667F]/25 hover:border-[#32667F]/50 shadow-xs'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border ${subj.badgeBg}`}>
+                            {subj.isMostLearned ? '👑 #1 Most Learned' : `Rank #${subj.rank} • ${subj.status}`}
+                          </span>
+                          <span className="text-[10px] text-gray-400">({subj.category})</span>
+                        </div>
+                        <h5 className="text-xs font-bold leading-tight">{subj.name}</h5>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className="text-sm font-black text-[#EA8833] font-mono">{subj.hours}h</span>
+                        <span className="text-[9px] text-[#32667F] block font-semibold">{subj.pctShare}% of total</span>
+                      </div>
+                    </div>
+
+                    <p className="text-[10px] text-gray-300/80 mt-1.5 line-clamp-2">
+                      {subj.description}
+                    </p>
+
+                    {/* Mastery Bar */}
+                    <div className="mt-2.5 space-y-1">
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span className="text-gray-400">Subject Mastery</span>
+                        <span className="font-bold text-white font-mono">{subj.mastery}%</span>
+                      </div>
+                      <div className="w-full bg-[#0c2233] rounded-full h-2 overflow-hidden border border-[#32667F]/30">
+                        <div
+                          className={`h-full bg-gradient-to-r ${subj.color} rounded-full transition-all duration-500`}
+                          style={{ width: `${subj.mastery}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Metrics Row */}
+                    <div className="mt-3 pt-2 border-t border-[#32667F]/30 flex items-center justify-between text-[10px] text-gray-300">
+                      <span className="flex items-center gap-1">
+                        <BookOpen className="w-3 h-3 text-[#38bdf8]" />
+                        <strong>{subj.lessonsDone}/{subj.totalLessons}</strong> Lessons
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Trophy className="w-3 h-3 text-[#EEA23A]" />
+                        <strong>{subj.quizzesPassed}/{subj.totalQuizzes}</strong> Quizzes
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Flame className="w-3 h-3 text-[#F38940]" />
+                        <span>Streak: <strong>{subj.streak}</strong></span>
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -1853,12 +2217,12 @@ export default function ActiveLectureView({
                     <img src="/techeru_transparent.png" alt="Techeru" className="w-full h-full object-contain rounded-full" onError={(e) => { (e.target as HTMLImageElement).src = '/logo_cat.png'; }} />
                   </div>
                   <div>
-                    <p className="text-xs font-bold leading-tight text-[#EA8833]">Professor Techeru's Activity Analysis</p>
-                    <p className="text-[9px] opacity-70">Cognitive Retention Evaluation</p>
+                    <p className="text-xs font-bold leading-tight text-[#EA8833]">Professor Techeru's Subject Analysis</p>
+                    <p className="text-[9px] opacity-70">Cognitive Retention & Subject Pacing</p>
                   </div>
                 </div>
                 <p className="text-[11px] leading-relaxed opacity-90">
-                  "The student has completed <strong>14 consecutive reading days</strong> with strong ethical reasoning. With <strong>5 days left</strong>, our learning trajectory is ahead of schedule! Focus on non-maleficence triage scenarios to secure an A+."
+                  "Your #1 most learned subject is <strong>{mostLearnedSubject.name}</strong> with <strong>8.5 hours</strong> and <strong>96% mastery</strong>! Your grasp of autonomy and ethical triage is exemplary. Next recommendation: Dedicate 45 minutes to <strong>Medical Terminology & HIPAA</strong> to balance all four enrolled subjects."
                 </p>
               </div>
 
@@ -1870,11 +2234,11 @@ export default function ActiveLectureView({
                   </div>
                   <div>
                     <p className="text-xs font-bold leading-tight text-pink-400">Pip's Study Buddy Cheer 🐭💕</p>
-                    <p className="text-[9px] opacity-70">Daily Encouragement</p>
+                    <p className="text-[9px] opacity-70">Enrolled Subjects Progress</p>
                   </div>
                 </div>
                 <p className="text-[11px] leading-relaxed opacity-90 text-pink-100">
-                  "You're on a <strong>7-day streak</strong> and your activity level is super high! Just <strong>5 days left</strong> until we finish this entire notebook! You are doing amazing, let's keep the streak alive! 🧀✨"
+                  "Woohoo! You've learned across <strong>4 subjects</strong>, and <strong>{mostLearnedSubject.name.split('&')[0].trim()}</strong> is by far your favorite! 🧀✨ You have a <strong>7-day active streak</strong>. Keep up this momentum and let's ace all remaining quizzes!"
                 </p>
               </div>
             </div>
