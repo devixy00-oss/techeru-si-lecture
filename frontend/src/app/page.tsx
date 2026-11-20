@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import ActiveLectureView, { NotebookData } from '@/components/ActiveLectureView';
 import MyNotebooksView from '@/components/MyNotebooksView';
+import LiveClassMode from '@/components/LiveClassMode';
+import { Radio } from 'lucide-react';
 
 const INITIAL_NOTEBOOKS: NotebookData[] = [
   {
@@ -275,8 +277,8 @@ const INITIAL_NOTEBOOKS: NotebookData[] = [
 ];
 
 export default function Home() {
-  // Navigation Experience: 'lecture' (Active Lecture - Reference Image) | 'notebooks' (My Notebooks Dashboard)
-  const [currentView, setCurrentView] = useState<'lecture' | 'notebooks'>('lecture');
+  // Navigation Experience: 'lecture' (Active Lecture) | 'notebooks' (My Notebooks) | 'liveClass' (3D Interactive Class)
+  const [currentView, setCurrentView] = useState<'lecture' | 'notebooks' | 'liveClass'>('lecture');
 
   // Notebooks list
   const [notebooks, setNotebooks] = useState<NotebookData[]>(() => {
@@ -388,11 +390,24 @@ export default function Home() {
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-[#0d2131] text-white flex flex-col font-sans select-none">
-      {currentView === 'lecture' ? (
+      {currentView === 'liveClass' ? (
+        <LiveClassMode
+          sessions={[
+            {
+              id: activeNotebook.id,
+              title: activeNotebook.title,
+              notes: activeNotebook.topics[0]?.summary || activeNotebook.title,
+              flashcards: activeNotebook.topics[0]?.flashcards || [],
+            },
+          ]}
+          onExit={() => setCurrentView('lecture')}
+        />
+      ) : currentView === 'lecture' ? (
         <ActiveLectureView
           notebook={activeNotebook}
           onEndClass={handleEndClass}
           onNavigateHome={() => setCurrentView('notebooks')}
+          onOpenLiveClass={() => setCurrentView('liveClass')}
         />
       ) : (
         <div className="h-screen w-screen flex flex-col overflow-hidden bg-[#0d2131]">
@@ -424,6 +439,17 @@ export default function Home() {
             </div>
 
             <div className="flex items-center gap-3">
+              {/* Live Class Button */}
+              <button
+                onClick={() => setCurrentView('liveClass')}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-red-600 to-[#F38940] hover:from-red-500 hover:to-[#EA8833] text-white font-bold text-xs shadow-lg shadow-red-500/30 transition-all hover:scale-105 active:scale-95"
+                title="Join Live Class with Professor Techeru"
+              >
+                <Radio className="w-3.5 h-3.5 animate-pulse text-white" />
+                <span>Live Class</span>
+                <span className="w-2 h-2 rounded-full bg-white animate-ping ml-0.5" />
+              </button>
+
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#0e2538] border border-[#32667F]/50 text-white shadow-sm">
                 <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-[#EA8833] to-[#F38940] flex items-center justify-center text-[11px] font-extrabold text-white shadow-sm">
                   G

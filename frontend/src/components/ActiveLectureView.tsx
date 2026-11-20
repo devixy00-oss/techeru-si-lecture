@@ -37,6 +37,7 @@ import {
   Edit3,
   Share2,
   User,
+  Radio,
 } from 'lucide-react';
 import FlashcardDeck from './FlashcardDeck';
 import { speechManager } from '@/audio/SpeechManager';
@@ -81,12 +82,14 @@ interface ActiveLectureViewProps {
   notebook: NotebookData;
   onEndClass: () => void;
   onNavigateHome: () => void;
+  onOpenLiveClass?: () => void;
 }
 
 export default function ActiveLectureView({
   notebook,
   onEndClass,
   onNavigateHome,
+  onOpenLiveClass,
 }: ActiveLectureViewProps) {
   // Tabs & Navigation
   const [activeTab, setActiveTab] = useState<'lecture' | 'quiz' | 'flashcards' | 'summary' | 'notes'>('lecture');
@@ -468,6 +471,19 @@ export default function ActiveLectureView({
             )}
           </div>
 
+          {/* Live Class Button (Interactive 3D Classroom) */}
+          {onOpenLiveClass && (
+            <button
+              onClick={onOpenLiveClass}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-red-600 to-[#F38940] hover:from-red-500 hover:to-[#EA8833] text-white text-xs font-bold shadow-lg shadow-red-500/30 transition-all hover:scale-105 active:scale-95"
+              title="Join Live Class with Professor Techeru"
+            >
+              <Radio className="w-3.5 h-3.5 animate-pulse text-white" />
+              <span>Live Class</span>
+              <span className="w-2 h-2 rounded-full bg-white animate-ping ml-0.5" />
+            </button>
+          )}
+
           {/* Guest Mode Profile (Made Guest Mode!) */}
           <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border shadow-sm transition-all ${
             isDarkMode
@@ -495,6 +511,18 @@ export default function ActiveLectureView({
               <HomeIcon className="w-4 h-4" />
               <span>Home</span>
             </button>
+            {onOpenLiveClass && (
+              <button
+                onClick={onOpenLiveClass}
+                className="w-full flex items-center justify-between px-4 py-2 rounded-xl font-bold text-xs bg-red-600/15 border border-red-500/30 text-red-400 hover:bg-red-600/25 transition-all group shadow-sm"
+              >
+                <div className="flex items-center gap-3.5">
+                  <Radio className="w-4 h-4 text-red-500 group-hover:animate-pulse" />
+                  <span>Live Class</span>
+                </div>
+                <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
+              </button>
+            )}
             <button
               onClick={() => setActiveTab('lecture')}
               className={`w-full flex items-center gap-3.5 px-4 py-2 rounded-xl font-medium text-xs transition-all ${
@@ -611,7 +639,7 @@ export default function ActiveLectureView({
         {/* ────────── CENTER COLUMN: CLASSROOM WORKSPACE ────────── */}
         <main className={`flex-1 flex flex-col p-4 overflow-hidden ${themeBg} transition-colors duration-200`}>
           {/* Main Lecture Card */}
-          <div className={`flex-1 flex flex-col justify-between ${cardBg} border rounded-3xl p-5 shadow-2xl backdrop-blur-2xl overflow-hidden relative min-h-0`}>
+          <div className={`flex-1 flex flex-col ${cardBg} border rounded-3xl px-5 pt-4 pb-2.5 shadow-2xl backdrop-blur-2xl overflow-hidden relative min-h-0`}>
             {/* Ambient Back Glows using palette */}
             <div className="w-96 h-96 bg-[#EA8833]/10 rounded-full blur-3xl absolute -top-20 -left-20 pointer-events-none" />
             <div className="w-96 h-96 bg-[#32667F]/15 rounded-full blur-3xl absolute -bottom-20 -right-20 pointer-events-none" />
@@ -634,6 +662,17 @@ export default function ActiveLectureView({
 
               {/* Action Buttons */}
               <div className="flex items-center gap-2">
+                {onOpenLiveClass && (
+                  <button
+                    onClick={onOpenLiveClass}
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-red-600 via-[#F38940] to-[#EA8833] hover:opacity-90 text-xs text-white font-bold shadow-lg shadow-red-500/30 transition-all hover:scale-105 active:scale-95"
+                    title="Enter 3D Interactive Live Class"
+                  >
+                    <Radio className="w-3.5 h-3.5 animate-pulse text-white" />
+                    <span>Live Class</span>
+                    <span className="w-2 h-2 rounded-full bg-white animate-ping ml-0.5" />
+                  </button>
+                )}
                 <button
                   onClick={() => setShowKeyPointsModal(true)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all ${
@@ -1012,7 +1051,7 @@ export default function ActiveLectureView({
             </div>
 
             {/* 4. Bottom Input Bar (Cleanly Anchored at Bottom, Giving Chat Maximum Space!) */}
-            <div className="pt-3 relative z-10 shrink-0 mt-auto">
+            <div className="pt-2 pb-0 relative z-10 shrink-0 mt-auto">
               <div className={`${inputBg} rounded-full px-4 py-2 flex items-center gap-3 shadow-xl backdrop-blur-xl transition-colors`}>
                 <Sparkles className="w-4 h-4 text-[#EA8833] shrink-0 animate-pulse" />
                 <input
@@ -1036,7 +1075,7 @@ export default function ActiveLectureView({
           </div>
 
           {/* 5. Bottom Learning Progress Footer Card */}
-          <div className={`mt-3 ${cardBg} border rounded-2xl px-6 py-2.5 flex items-center justify-between shadow-xl shrink-0 transition-colors`}>
+          <div className={`mt-2 ${cardBg} border rounded-2xl px-6 py-2 flex items-center justify-between shadow-xl shrink-0 transition-colors`}>
             {/* Lessons */}
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-xl bg-[#EA8833]/20 border border-[#EA8833]/30 flex items-center justify-center text-[#EA8833]">
@@ -1124,28 +1163,41 @@ export default function ActiveLectureView({
           </div>
 
           {/* Sleek Professor Techeru Profile Badge (Compact & Responsive - No bulky 3D viewport) */}
-          <div className={`my-3 p-3 rounded-2xl border flex items-center gap-3 shadow-md ${
+          <div className={`my-3 p-3 rounded-2xl border flex flex-col gap-2.5 shadow-md ${
             isDarkMode ? 'bg-[#183952]/80 border-[#32667F]/40' : 'bg-white border-[#32667F]/30 shadow-sm'
           }`}>
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-[#EA8833] to-[#F38940] p-1 shrink-0 shadow-md flex items-center justify-center">
-              <img
-                src="/techeru_transparent.png"
-                alt="Professor Techeru"
-                className="w-full h-full object-contain"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/logo_cat.png';
-                }}
-              />
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-[#EA8833] to-[#F38940] p-1 shrink-0 shadow-md flex items-center justify-center">
+                <img
+                  src="/techeru_transparent.png"
+                  alt="Professor Techeru"
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/logo_cat.png';
+                  }}
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold leading-tight flex items-center gap-1">
+                  <span>Professor Techeru</span>
+                  <Sparkles className="w-3.5 h-3.5 text-[#EEA23A]" />
+                </p>
+                <p className="text-[11px] text-[#EEA23A] font-medium truncate mt-0.5">
+                  Topic: {notebook.title}
+                </p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <p className="text-xs font-bold leading-tight flex items-center gap-1">
-                <span>Professor Techeru</span>
-                <Sparkles className="w-3.5 h-3.5 text-[#EEA23A]" />
-              </p>
-              <p className="text-[11px] text-[#EEA23A] font-medium truncate mt-0.5">
-                Topic: {notebook.title}
-              </p>
-            </div>
+            {onOpenLiveClass && (
+              <button
+                onClick={onOpenLiveClass}
+                className="w-full py-1.5 px-3 rounded-xl bg-gradient-to-r from-red-600 via-[#F38940] to-[#EA8833] hover:opacity-90 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-red-500/25 transition-all hover:scale-102 active:scale-98"
+                title="Start 3D Live Classroom with Professor Techeru"
+              >
+                <Radio className="w-3.5 h-3.5 animate-pulse text-white" />
+                <span>Join 3D Live Class</span>
+                <span className="w-2 h-2 rounded-full bg-white animate-ping ml-0.5" />
+              </button>
+            )}
           </div>
 
           {/* Quick Summary Card */}
