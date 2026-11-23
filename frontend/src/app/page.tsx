@@ -414,7 +414,7 @@ export default function Home() {
           {/* My Notebooks Top Header with Palette #EA8833, #EEA23A, #F38940, #132F45, #32667F */}
           <header className="h-16 px-6 bg-[#132F45]/95 border-b border-[#32667F]/40 backdrop-blur-xl flex items-center justify-between shrink-0 z-30">
             <div
-              className="flex items-center gap-3 cursor-pointer"
+              className="flex items-center gap-3 cursor-pointer shrink-0"
               onClick={() => setCurrentView('lecture')}
             >
               <div className="w-10 h-10 flex items-center justify-center shrink-0">
@@ -428,17 +428,17 @@ export default function Home() {
                 />
               </div>
               <div className="flex flex-col">
-                <div className="flex items-center gap-1.5 leading-none">
+                <div className="flex items-center gap-1.5 leading-none whitespace-nowrap">
                   <span className="font-extrabold text-lg text-white tracking-tight">Techeru SI</span>
                   <span className="font-extrabold text-lg text-[#F38940] tracking-tight">Lecture</span>
                 </div>
-                <span className="text-[10px] text-[#32667F] tracking-wider mt-0.5 font-medium">
+                <span className="text-[10px] text-[#32667F] tracking-wider mt-0.5 font-medium whitespace-nowrap">
                   Learn • Ask • Practice • Excel
                 </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 shrink-0">
               {/* Live Class Button — Home Page */}
               <button
                 onClick={() => setCurrentView('liveClass')}
