@@ -50,6 +50,7 @@ interface TeacherCat3DProps {
   cameraPreset?: CameraPreset;
   onCameraPresetChange?: (preset: CameraPreset) => void;
   className?: string;
+  initialMode?: 'studio' | 'webgl';
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -697,11 +698,29 @@ export default function TeacherCat3D({
   cameraPreset = 'full',
   onCameraPresetChange,
   className = '',
+  initialMode = 'studio',
 }: TeacherCat3DProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const mouseRef = useRef({ x: 0, y: 0 });
+
+  // Dual-Engine: 'studio' (Official Gemini-Generated Video Animation) | 'webgl' (3D Armature & Orbit Rig)
+  const [activeEngine, setActiveEngine] = useState<'studio' | 'webgl'>(initialMode);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Sync Studio Animation Video playback with interactive gesture controls
+  useEffect(() => {
+    if (!videoRef.current) return;
+    if (animation === 'waving' || animation === 'greeting') {
+      videoRef.current.currentTime = 1.0;
+      videoRef.current.play().catch(() => {});
+    } else if (animation === 'clap' || animation === 'happy') {
+      videoRef.current.playbackRate = 1.25;
+    } else {
+      videoRef.current.playbackRate = 1.0;
+    }
+  }, [animation]);
 
   // Camera animation interpolation targets (full frames complete character comfortably)
   const targetCamPos = useRef(new THREE.Vector3(0, 0.0, 4.8));
@@ -1004,67 +1023,6 @@ export default function TeacherCat3D({
     holoRing.rotation.x = Math.PI / 2;
     holoRing.position.set(0, -0.9, 0);
     Root.add(holoRing);
-
-    // ── GENUINE 3D GLB MODEL LOADER (AI-GENERATED MESH INTEGRATION) ──
-    const gltfLoader = new GLTFLoader();
-    let mixer: THREE.AnimationMixer | null = null;
-    let importedModel: THREE.Group | null = null;
-    let usingImportedModel = false;
-
-    gltfLoader.load(
-      '/models/teacher-cat.glb?v=20261119',
-      (gltf) => {
-        if (gltf.scene) {
-          importedModel = gltf.scene;
-
-          // Normalize scale to 1.78m character height
-          const box = new THREE.Box3().setFromObject(importedModel);
-          const size = box.getSize(new THREE.Vector3());
-
-          if (size.y > 0.05) {
-            const scale = 1.78 / size.y;
-            importedModel.scale.setScalar(scale);
-          }
-
-          // Anchor grounded at Y = -0.9 (floor level)
-          importedModel.position.set(0, -0.9, 0);
-
-          importedModel.traverse((child) => {
-            if ((child as THREE.Mesh).isMesh) {
-              const mesh = child as THREE.Mesh;
-              mesh.castShadow = true;
-              mesh.receiveShadow = true;
-              if (mesh.material) {
-                const mat = mesh.material as THREE.MeshStandardMaterial;
-                mat.vertexColors = true;
-                mat.color.setRGB(1.0, 1.0, 1.0);
-                mat.roughness = 0.52;
-                mat.metalness = 0.06;
-                mat.side = THREE.DoubleSide;
-                mat.needsUpdate = true;
-              }
-            }
-          });
-
-          // Check if model contains embedded skeletal animations
-          if (gltf.animations && gltf.animations.length > 0) {
-            mixer = new THREE.AnimationMixer(importedModel);
-            const clip = gltf.animations[0];
-            const action = mixer.clipAction(clip);
-            action.play();
-          }
-
-          Root.add(importedModel);
-          usingImportedModel = true;
-          // Hide procedural primitive mannequin
-          Hips.visible = false;
-        }
-      },
-      undefined,
-      (err) => {
-        console.warn('GLB asset notice:', err);
-      }
-    );
 
     const Hips = new THREE.Group();
     Hips.name = 'Hips';
@@ -1602,65 +1560,6 @@ export default function TeacherCat3D({
       controls.target.lerp(targetCamLook.current, 0.06);
       controls.update();
 
-      // 0. Update Imported GLB Skeletal Animation Mixer & Posture
-      if (mixer) {
-        mixer.update(delta);
-      }
-
-      if (usingImportedModel && importedModel) {
-        // Gaze tracking towards user cursor
-        const targetRotY = mouseRef.current.x * 0.22;
-        const targetRotX = -mouseRef.current.y * 0.1;
-
-        // Expressive gestures mapped to classroom animation states
-        let gestureRotY = 0;
-        let gestureRotZ = 0;
-        let gestureRotX = 0;
-        let gesturePosY = 0;
-
-        if (anim === 'greeting' || anim === 'waving') {
-          gestureRotZ = Math.sin(t * 4.5) * 0.04;
-          gestureRotY = Math.sin(t * 3.0) * 0.06;
-        } else if (anim === 'nodding' || anim === 'nod') {
-          gestureRotX = Math.sin(t * 6.0) * 0.07;
-        } else if (anim === 'thinking' || anim === 'curious') {
-          gestureRotZ = 0.04;
-          gestureRotY = 0.1;
-        } else if (anim === 'pointing' || anim === 'point') {
-          gestureRotY = -0.12;
-          gestureRotX = 0.03;
-        } else if (anim === 'happy' || anim === 'clap' || anim === 'excited') {
-          gesturePosY = Math.abs(Math.sin(t * 7.0)) * 0.03;
-        } else if (anim === 'listening') {
-          gestureRotZ = 0.035;
-          gestureRotX = -0.02;
-        }
-
-        importedModel.rotation.y = THREE.MathUtils.lerp(
-          importedModel.rotation.y,
-          targetRotY + gestureRotY,
-          0.06
-        );
-        importedModel.rotation.x = THREE.MathUtils.lerp(
-          importedModel.rotation.x,
-          targetRotX + gestureRotX,
-          0.06
-        );
-        importedModel.rotation.z = THREE.MathUtils.lerp(
-          importedModel.rotation.z,
-          gestureRotZ,
-          0.06
-        );
-
-        // Natural subtle breathing motion + gesture bounce
-        importedModel.position.y = -0.9 + Math.sin(t * 2.2) * 0.012 + gesturePosY;
-
-        // Vocal lip-sync reactive speech bounce
-        if (lipSync.amplitude > 0.02) {
-          importedModel.position.y += Math.sin(t * 14) * (lipSync.amplitude * 0.02);
-        }
-      }
-
       // 1. Natural Breathing Spine & Chest Motion
       const breath = Math.sin(t * 2.2) * 0.012;
       Chest.position.y = 0.24 + breath;
@@ -2174,10 +2073,68 @@ export default function TeacherCat3D({
   }, []);
 
   return (
-    <div
-      ref={mountRef}
-      className={`w-full h-full relative cursor-grab active:cursor-grabbing select-none ${className}`}
-      title="Left-click & drag to orbit 360°, scroll to zoom"
-    />
+    <div className={`w-full h-full relative select-none overflow-hidden ${className}`}>
+      {/* 1. Studio Cinematic Animation Engine (Using Official Gemini-Generated Animation) */}
+      <div
+        className={`w-full h-full absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${
+          activeEngine === 'studio' ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'
+        }`}
+      >
+        <video
+          ref={videoRef}
+          src="/videos/techeru_animation.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-full object-contain transition-transform duration-700 ease-out"
+          style={{
+            transform:
+              cameraPreset === 'face'
+                ? 'scale(1.85) translateY(18%)'
+                : cameraPreset === 'waist'
+                ? 'scale(1.35) translateY(6%)'
+                : 'scale(1.0) translateY(0%)',
+          }}
+        />
+        {/* Soft cinematic vignette overlay matching classroom background */}
+        <div className="absolute inset-0 pointer-events-none bg-radial from-transparent via-transparent to-black/35" />
+      </div>
+
+      {/* 2. Real-Time 3D WebGL Skeleton Rig Engine (28-Bone Hierarchy & Orbit Controls) */}
+      <div
+        ref={mountRef}
+        className={`w-full h-full absolute inset-0 cursor-grab active:cursor-grabbing transition-opacity duration-300 ${
+          activeEngine === 'webgl' ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'
+        }`}
+        title="Left-click & drag to orbit 360°, scroll to zoom"
+      />
+
+      {/* Engine Switcher Pill (Floating in stage top-center, perfectly balanced) */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 flex items-center bg-[#0d1322]/85 border border-white/15 rounded-full p-1 backdrop-blur-md shadow-2xl">
+        <button
+          onClick={() => setActiveEngine('studio')}
+          className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold transition-all ${
+            activeEngine === 'studio'
+              ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25'
+              : 'text-gray-400 hover:text-white hover:bg-white/5'
+          }`}
+          title="Official Studio Animated Character Video"
+        >
+          <span>🎬</span> Studio Anim
+        </button>
+        <button
+          onClick={() => setActiveEngine('webgl')}
+          className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold transition-all ${
+            activeEngine === 'webgl'
+              ? 'bg-gradient-to-r from-[#EA8833] to-[#F38940] text-white shadow-lg shadow-[#EA8833]/25'
+              : 'text-gray-400 hover:text-white hover:bg-white/5'
+          }`}
+          title="Interactive 3D WebGL Skeletal Rig (Orbit, Lip-Sync & Joint Kinematics)"
+        >
+          <span>📐</span> 3D WebGL Rig
+        </button>
+      </div>
+    </div>
   );
 }

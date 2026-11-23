@@ -278,7 +278,7 @@ const INITIAL_NOTEBOOKS: NotebookData[] = [
 
 export default function Home() {
   // Navigation Experience: 'lecture' (Active Lecture) | 'notebooks' (My Notebooks) | 'liveClass' (3D Interactive Class)
-  const [currentView, setCurrentView] = useState<'lecture' | 'notebooks' | 'liveClass'>('lecture');
+  const [currentView, setCurrentView] = useState<'lecture' | 'notebooks' | 'liveClass'>('notebooks');
 
   // Notebooks list
   const [notebooks, setNotebooks] = useState<NotebookData[]>(() => {
