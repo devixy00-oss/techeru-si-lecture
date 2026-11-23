@@ -439,7 +439,7 @@ export default function Home() {
             </div>
 
             <div className="flex items-center gap-3">
-              {/* Live Class Button */}
+              {/* Live Class Button — Home Page */}
               <button
                 onClick={() => setCurrentView('liveClass')}
                 className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-red-600 to-[#F38940] hover:from-red-500 hover:to-[#EA8833] text-white font-bold text-xs shadow-lg shadow-red-500/30 transition-all hover:scale-105 active:scale-95"
